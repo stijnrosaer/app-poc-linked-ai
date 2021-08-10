@@ -1,0 +1,81 @@
+version: '3.4'
+
+services:
+  identifier:
+    image: semtech/mu-identifier:1.9.1
+    links:
+      - dispatcher:dispatcher
+    ports:
+      - 80:80
+
+  dispatcher:
+    image: semtech/mu-dispatcher:2.0.0
+    links:
+      - dataconvert:dataconvert
+      - jobs:jobs
+    volumes:
+      - ./config/dispatcher:/config
+
+  db:
+    image: tenforce/virtuoso:1.3.2-virtuoso7.2.2
+    environment:
+      SPARQL_UPDATE: "true"
+      DEFAULT_GRAPH: "http://mu.semte.ch/application"
+    ports:
+      - "8890:8890"
+    volumes:
+      - ./data/db:/data
+      - ./config/virtuoso/virtuoso.ini:/data/virtuoso.ini
+
+  dataconvert:
+    image: redpencil/ai-data-importer
+    links:
+      - db:database
+    environment:
+      LOG_LEVEL: "debug"
+      MODE: "production"
+      ACCEPT_FILENAME: "true"
+      ACCEPT_OPTIONS: "true"
+    volumes:
+      - ./config/dataconvert:/config
+      - ./share:/share
+
+  label-trainer:
+    image: redpencil/ai-label-trainer
+    environment:
+      LOG_LEVEL: "debug"
+      TASK: "predicates"
+    links:
+      - db:database
+    volumes:
+      - ./config/label-trainer/constants.py:/app/constants.py
+      - ./share:/share
+  #    deploy:
+  #      resources:
+  #        limits:
+  #          cpus: 4
+
+  label-predictor:
+    image: redpencil/ai-label-predictor
+    environment:
+      LOG_LEVEL: "debug"
+      MODE: "production"
+    links:
+      - db:database
+    volumes:
+      - ./share:/share
+
+  jobs:
+    image: redpencil/ai-job
+    links:
+      - db:database
+    environment:
+      LOG_LEVEL: "debug"
+      MODE: "production"
+
+  migrations:
+    image: semtech/mu-migrations-service
+    links:
+      - db:database
+    volumes:
+      - ./config/migrations:/data/migrations

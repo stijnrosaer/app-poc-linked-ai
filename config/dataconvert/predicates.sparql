@@ -1,0 +1,59 @@
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+PREFIX persoon: <http://data.vlaanderen.be/ns/persoon#>
+PREFIX person: <http://www.w3.org/ns/person#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX mandaat: <http://data.vlaanderen.be/ns/mandaat#>
+PREFIX regorg: <https://www.w3.org/ns/regorg#>
+PREFIX locn: <http://www.w3.org/ns/locn#>
+
+SELECT ?label ?value
+     WHERE {
+       {
+         VALUES ?label { besluit:Besluit }
+         ?s a ?label;
+            prov:value ?value.
+       }
+       UNION
+       {
+         VALUES ?label { besluit:Artikel }
+         ?s a ?label;
+            prov:value ?value.
+       }
+       UNION
+       {
+         VALUES ?label { person:Person }
+         ?s a ?label;
+            persoon:gebruikteVoornaam ?value.
+       }
+       UNION
+       {
+         VALUES ?label { person:Person }
+         ?s a ?label;
+            foaf:familyName ?value.
+
+       }
+       UNION
+       {
+         VALUES ?label { person:Person }
+         ?s a ?label;
+            persoon:gebruikteVoornaam ?givenName;
+            foaf:familyName ?familyName.
+
+            BIND( CONCAT( STR(?givenName), " ", STR(?familyName) ) AS ?value)
+       }
+       UNION
+       {
+         VALUES ?label { mandaat:Fractie }
+         ?s a ?label;
+            regorg:legalName ?value.
+
+       }
+       UNION
+       {
+         VALUES ?label { locn:Address }
+         ?s a ?label;
+            locn:fullAddress ?value.
+
+       }
+}

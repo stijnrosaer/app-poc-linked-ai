@@ -1,0 +1,9 @@
+PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+PREFIX prov:  <http://www.w3.org/ns/prov#>
+SELECT (?besluit as ?key) (?value as ?value) WHERE {
+    GRAPH <http://mu.semte.ch/application> {
+        ?besluit a besluit:Besluit;
+        prov:value ?value .
+
+    }
+}
